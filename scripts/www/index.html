@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>🎧 耳机背单词</title>
+    <!-- PakePlus 环境兼容 meta -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="耳机背单词">
+    <meta name="theme-color" content="#4F6EF7">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎧</text></svg>">
+    <style>
+        :root {
+            --primary: #4F6EF7;
+            --success: #34C759;
+            --danger: #FF3B30;
+            --bg: #F2F3F7;
+            --card: #FFFFFF;
+            --text: #1C1C1E;
+            --text-secondary: #6E6E73;
+            --border: #E5E5EA;
+            --shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            --radius: 16px;
+            --radius-sm: 10px;
+            --safe-bottom: env(safe-area-inset-bottom, 20px);
+            --nav-height: 64px;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+        .app-container {
+            width: 100%;
+            max-width: 480px;
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg);
+            box-shadow: 0 0 60px rgba(0, 0, 0, 0.06);
+        }
+        .app-header {
+            background: rgba(255, 255, 255, 0.85);
+            padding: 12px 20px;
+            padding-top: max(12px, env(safe-area-inset-top, 12px));
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        .app-header .logo {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
+        .app-header .subtitle {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 1px;
+        }
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 16px 100px;
+            -webkit-overflow-scrolling: touch;
+        }
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 480px;
+            background: rgba(255, 255, 255, 0.9);
+            border-top: 1px solid var(--border);
+            display: flex;
+            z-index: 100;
+            padding-bottom: var(--safe-bottom);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            height: calc(var(--nav-height) + var(--safe-bottom));
+        }
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-secondary);
+            font-size: 10px;
+            font-weight: 500;
+            border: none;
+            background: transparent;
+            padding: 8px 0;
+            position: relative;
+        }
+        .nav-item .icon {
+            font-size: 22px;
+            transition: transform 0.2s;
+        }
+        .nav-item.active {
+            color: var(--primary);
+            font-weight: 600;
+        }
+        .nav-item.active .icon {
+            transform: scale(1.1);
+        }
+        .nav-item.active::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 24px;
+            height: 3px;
+            background: var(--primary);
+            border-radius: 0 0 3px 3px;
+        }
+        .nav-badge {
+            position: absolute;
+            top: 4px;
+            right: calc(50% - 18px);
+            background: var(--danger);
+            color: #fff;
+            font-size: 9px;
+            min-width: 16px;
+            height: 16px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 5px;
+            font-weight: 600;
+        }
+        .card {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 18px;
+            margin-bottom: 14px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+        .card-title {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .input-group {
+            margin-bottom: 12px;
+        }
+        .input-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+        .input-field {
+            width: 100%;
+            padding: 12px 14px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 15px;
+            background: #F9F9FB;
+            transition: all 0.2s;
+            color: var(--text);
+            font-family: 'SF Mono', 'Menlo', 'Consolas', monospace;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(79, 110, 247, 0.1);
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-size: 15px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            letter-spacing: -0.2px;
+            white-space: nowrap;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .btn:active {
+            transform: scale(0.96);
+            opacity: 0.85;
+        }
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+            box-shadow: 0 4px 16px rgba(79, 110, 247, 0.3);
+        }
+        .btn-outline {
+            background: #fff;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+        .btn-block {
+            width: 100%;
+            display: flex;
+        }
+        .btn-xl {
+            padding: 18px 32px;
+            font-size: 18px;
+            border-radius: 30px;
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 5px 10px;
+            border-radius: 14px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .tag-unreviewed {
+            background: #FFF3E0;
+            color: #E65100;
+        }
+        .tag-correct {
+            background: #E8F5E9;
+            color: #1B5E20;
+        }
+        .tag-wrong {
+            background: #FFEBEE;
+            color: #B71C1C;
+        }
+        .word-list {
+            list-style: none;
+            max-height: 350px;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .word-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 6px;
+            background: #F9F9FB;
+            gap: 10px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .word-item .word-text {
+            font-weight: 600;
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .word-item .word-meaning {
+            font-size: 11px;
+            color: var(--text-secondary);
+            flex: 2;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            text-align: right;
+        }
+        .section-tabs {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 12px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 4px;
+            flex-wrap: wrap;
+        }
+        .section-tab {
+            padding: 7px 14px;
+            border-radius: 18px;
+            font-size: 12px;
+            font-weight: 600;
+            border: 1.5px solid var(--border);
+            background: #fff;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+            color: var(--text-secondary);
+            -webkit-tap-highlight-color: transparent;
+        }
+        .section-tab.active {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+        }
+        .section-tab .count {
+            font-weight: 400;
+            opacity: 0.8;
+            font-size: 10px;
+        }
+        .stats-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+        }
+        .stat-card {
+            flex: 1;
+            min-width: 55px;
+            background: var(--card);
+            border-radius: var(--radius-sm);
+            padding: 12px 8px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+        .stat-card .stat-num {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -1px;
+        }
+        .stat-card .stat-label {
+            font-size: 10px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+        .stat-card.unreviewed .stat-num {
+            color: #E65100;
+        }
+        .stat-card.correct .stat-num {
+            color: #1B5E20;
+        }
+        .stat-card.wrong .stat-num {
+            color: #B71C1C;
+        }
+        .review-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            padding-bottom: calc(40px + var(--safe-bottom));
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .review-word-display {
+            font-size: 46px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            color: var(--primary);
+            text-align: center;
+            margin: 16px 0;
+            word-break: break-all;
+        }
+        .review-status {
+            font-size: 14px;
+            color: var(--text-secondary);
+            text-align: center;
+            min-height: 20px;
+        }
+        .review-feedback {
+            font-size: 15px;
+            font-weight: 600;
+            text-align: center;
+            padding: 14px 18px;
+            border-radius: var(--radius-sm);
+            margin: 10px 0;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        .review-feedback.correct {
+            background: #E8F5E9;
+            color: #1B5E20;
+        }
+        .review-feedback.wrong {
+            background: #FFEBEE;
+            color: #B71C1C;
+        }
+        .review-feedback.neutral {
+            background: #F0F0F5;
+            color: var(--text-secondary);
+        }
+        .listen-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            display: inline-block;
+            margin: 0 6px;
+            vertical-align: middle;
+            transition: all 0.3s;
+        }
+        .listen-dot.idle { background: #C7C7CC; }
+        .listen-dot.listening { background: var(--success); animation: dotPulse 1.2s ease-in-out infinite; }
+        .listen-dot.speaking { background: var(--warning); }
+        .listen-dot.judging { background: var(--primary); animation: dotPulse 0.6s ease-in-out infinite; }
+        @keyframes dotPulse {
+            0%, 100% { box-shadow: 0 0 0 0 currentColor; opacity: 1; }
+            50% { box-shadow: 0 0 0 12px transparent; opacity: 0.6; }
+        }
+        .review-hint {
+            font-size: 13px;
+            color: var(--text-secondary);
+            text-align: center;
+            margin-top: 8px;
+            line-height: 1.6;
+            background: rgba(79,110,247,0.08);
+            padding: 12px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 300px;
+        }
+        .review-hint b {
+            color: var(--primary);
+            font-weight: 700;
+        }
+        .review-close {
+            position: absolute;
+            top: max(16px, env(safe-area-inset-top, 16px));
+            right: 16px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            background: #fff;
+            font-size: 18px;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            -webkit-tap-highlight-color: transparent;
+            transition: all 0.2s;
+        }
+        .review-close:active {
+            transform: scale(0.9);
+            background: #f0f0f0;
+        }
+        .toast {
+            position: fixed;
+            top: calc(20px + env(safe-area-inset-top, 20px));
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1C1C1E;
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 999;
+            animation: slideDown 0.35s ease;
+            pointer-events: none;
+            white-space: nowrap;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+        }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateX(-50%) translateY(-30px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+        .toast.hide { animation: slideUp 0.3s ease forwards; }
+        @keyframes slideUp {
+            to { opacity: 0; transform: translateX(-50%) translateY(-30px); }
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+        }
+        .empty-state .emoji {
+            font-size: 48px;
+            display: block;
+            margin-bottom: 12px;
+        }
+        ::-webkit-scrollbar { width: 3px; }
+        ::-webkit-scrollbar-thumb { background: #D1D1D6; border-radius: 10px; }
+        @media (max-width: 380px) {
+            .review-word-display { font-size: 36px; }
+            .btn-xl { padding: 14px 24px; font-size: 16px; }
+        }
+        @media (min-width: 481px) {
+            .app-container { border-radius: 20px; margin: 10px auto; min-height: calc(100vh - 20px); min-height: calc(100dvh - 20px); }
+            .bottom-nav { border-radius: 0 0 20px 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container" id="app">
+        <header class="app-header">
+            <div class="logo"><span class="emoji">🎧</span>耳机背单词</div>
+            <div class="subtitle">走路复习 · 全程免提</div>
+        </header>
+        <main class="main-content" id="mainContent">
+            <!-- 设置页 -->
+            <div id="pageSettings" class="page">
+                <div class="card">
+                    <div class="card-title">🔑 DeepSeek API Key</div>
+                    <div class="input-group">
+                        <label>API Key</label>
+                        <input type="password" class="input-field" id="apiKeyInput" placeholder="sk-xxxxxxxxxxxxxxxx" autocomplete="off">
+                    </div>
+                    <button class="btn btn-outline btn-block" id="btnSaveApiKey">💾 保存 API Key</button>
+                    <p style="font-size:10px;color:var(--text-secondary);margin-top:8px;text-align:center;">密钥仅存储在本地浏览器</p>
+                </div>
+                <div class="card">
+                    <div class="card-title">📥 导入单词（TXT文件）</div>
+                    <p style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;">每行一个单词，如：apple<br>意思由AI自动翻译</p>
+                    <!-- 使用 PakePlus 兼容的原生文件选择控件 -->
+                    <input type="file" id="fileInput" accept=".txt,text/plain" style="display:none;">
+                    <button class="btn btn-primary btn-block" id="btnImportFile">📁 选择TXT文件</button>
+                    <div style="text-align:center;margin:8px 0;font-size:11px;color:var(--text-secondary);">或</div>
+                    <button class="btn btn-outline btn-block" id="btnLoadDemo">🎲 加载演示单词表</button>
+                </div>
+                <div class="card">
+                    <div class="card-title">📊 学习统计</div>
+                    <div class="stats-row">
+                        <div class="stat-card unreviewed"><div class="stat-num" id="statUnreviewed">0</div><div class="stat-label">未复习</div></div>
+                        <div class="stat-card correct"><div class="stat-num" id="statCorrect">0</div><div class="stat-label">正确</div></div>
+                        <div class="stat-card wrong"><div class="stat-num" id="statWrong">0</div><div class="stat-label">错误</div></div>
+                    </div>
+                </div>
+            </div>
+            <!-- 复习页 -->
+            <div id="pageReview" class="page" style="display:none;">
+                <div class="card" style="text-align:center;">
+                    <div class="card-title" style="justify-content:center;">🎯 复习范围</div>
+                    <div class="section-tabs" id="reviewFilterTabs" style="justify-content:center;">
+                        <button class="section-tab active" data-filter="unreviewed">未复习</button>
+                        <button class="section-tab" data-filter="all">全部</button>
+                        <button class="section-tab" data-filter="reviewed">已复习</button>
+                        <button class="section-tab" data-filter="correct">✅正确</button>
+                        <button class="section-tab" data-filter="wrong">❌错误</button>
+                    </div>
+                    <button class="btn btn-primary btn-xl btn-block" id="btnStartReview" style="margin-top:8px;">🎤 开始复习</button>
+                    <p style="font-size:10px;color:var(--text-secondary);margin-top:10px;">需要麦克风权限 · 建议佩戴耳机</p>
+                </div>
+                <div class="stats-row">
+                    <div class="stat-card unreviewed"><div class="stat-num" id="rStatUnreviewed">0</div><div class="stat-label">待复习</div></div>
+                    <div class="stat-card correct"><div class="stat-num" id="rStatCorrect">0</div><div class="stat-label">正确</div></div>
+                    <div class="stat-card wrong"><div class="stat-num" id="rStatWrong">0</div><div class="stat-label">错误</div></div>
+                </div>
+            </div>
+            <!-- 单词列表页 -->
+            <div id="pageWords" class="page" style="display:none;">
+                <div class="card">
+                    <div class="card-title">📋 单词列表</div>
+                    <div class="section-tabs" id="wordFilterTabs">
+                        <button class="section-tab active" data-filter="all">全部 <span class="count" id="countAll">0</span></button>
+                        <button class="section-tab" data-filter="unreviewed">未复习 <span class="count" id="countUnreviewed">0</span></button>
+                        <button class="section-tab" data-filter="correct">✅正确 <span class="count" id="countCorrect">0</span></button>
+                        <button class="section-tab" data-filter="wrong">❌错误 <span class="count" id="countWrong">0</span></button>
+                    </div>
+                    <ul class="word-list" id="wordList"></ul>
+                    <div class="empty-state" id="emptyWordList" style="display:none;"><span class="emoji">📭</span><span class="text">还没有导入单词</span></div>
+                </div>
+                <button class="btn btn-outline btn-block" id="btnResetProgress">🔄 重置复习进度</button>
+            </div>
+        </main>
+        <nav class="bottom-nav" id="bottomNav">
+            <button class="nav-item active" data-page="0"><span class="icon">⚙️</span>设置</button>
+            <button class="nav-item" data-page="1"><span class="icon">🎯</span>复习<span class="nav-badge" id="navBadge" style="display:none;">0</span></button>
+            <button class="nav-item" data-page="2"><span class="icon">📋</span>单词表</button>
+        </nav>
+        <!-- 复习覆盖层 -->
+        <div class="review-overlay" id="reviewOverlay" style="display:none;">
+            <button class="review-close" id="btnReviewClose" title="退出复习">✕</button>
+            <div class="review-status" id="reviewStatus">准备中...</div>
+            <div class="review-word-display" id="reviewWordDisplay">---</div>
+            <div style="display:flex;align-items:center;justify-content:center;gap:4px;margin:4px 0;">
+                <span class="listen-dot idle" id="listenDot"></span>
+                <span style="font-size:12px;color:var(--text-secondary);" id="listenLabel">空闲</span>
+            </div>
+            <div class="review-feedback neutral" id="reviewFeedback">准备就绪</div>
+            <!-- 大字版语音指令提示，防止不会用 -->
+            <div class="review-hint" id="reviewHint">
+                🗣️ 说出中文意思后说 <b>“判断”</b> 批改<br>
+                ⏭ 说 <b>“下一个”</b> 跳过 · 🚪 说 <b>“退出”</b> 结束
+            </div>
+        </div>
+        <div id="toastContainer"></div>
+    </div>
+
+    <script>
+        (function() {
+            const $ = s => document.querySelector(s);
+            const $$ = s => document.querySelectorAll(s);
+
+            // DOM
+            const pages = { settings: $('#pageSettings'), review: $('#pageReview'), words: $('#pageWords') };
+            const navItems = $$('.nav-item');
+            const apiKeyInput = $('#apiKeyInput');
+            const fileInput = $('#fileInput');
+            const reviewOverlay = $('#reviewOverlay');
+            const reviewWordDisplay = $('#reviewWordDisplay');
+            const reviewStatus = $('#reviewStatus');
+            const reviewFeedback = $('#reviewFeedback');
+            const reviewHint = $('#reviewHint');
+            const listenDot = $('#listenDot');
+            const listenLabel = $('#listenLabel');
+            const wordList = $('#wordList');
+            const emptyWordList = $('#emptyWordList');
+            const wordFilterTabs = $('#wordFilterTabs');
+            const reviewFilterTabs = $('#reviewFilterTabs');
+            const navBadge = $('#navBadge');
+            const toastContainer = $('#toastContainer');
+
+            // 状态
+            const STORAGE_KEY = 'headphone_vocab_data';
+            let appData = { apiKey: '', words: [] };
+            let currentPage = 0;
+            let currentWordFilter = 'all';
+            let reviewFilter = 'unreviewed';
+            let toastTimer = null;
+
+            const reviewState = {
+                active: false,
+                status: 'idle',
+                currentWordObj: null,
+                currentMeanings: [],
+                accumulatedAnswer: '',
+                hasJudged: false,
+                recognition: null,
+                loopTimer: null,
+            };
+
+            // ========== 存储 ==========
+            function loadData() {
+                try {
+                    const raw = localStorage.getItem(STORAGE_KEY);
+                    if (raw) {
+                        const d = JSON.parse(raw);
+                        appData.apiKey = d.apiKey || '';
+                        appData.words = (d.words || []).map(w => ({
+                            id: w.id || Date.now() + Math.random(),
+                            word: w.word,
+                            status: w.status || 'unreviewed',
+                            reviewedAt: w.reviewedAt || null,
+                            userAnswer: w.userAnswer || null,
+                            correctMeanings: w.correctMeanings || null,
+                            phonetic: w.phonetic || null,
+                        }));
+                    }
+                } catch (e) { appData = { apiKey: '', words: [] }; }
+                if (apiKeyInput) apiKeyInput.value = appData.apiKey;
+            }
+
+            function saveData() {
+                try { localStorage.setItem(STORAGE_KEY, JSON.stringify(appData)); } catch (e) {
+                    showToast('⚠️ 存储空间不足');
+                }
+            }
+
+            function showToast(msg, dur = 2000) {
+                if (toastTimer) clearTimeout(toastTimer);
+                const old = toastContainer.querySelector('.toast');
+                if (old) { old.classList.add('hide'); setTimeout(() => old.remove(), 300); }
+                const el = document.createElement('div');
+                el.className = 'toast';
+                el.textContent = msg;
+                toastContainer.appendChild(el);
+                toastTimer = setTimeout(() => { el.classList.add('hide'); setTimeout(() => el.remove(), 300); toastTimer = null; }, dur);
+            }
+
+            // ========== 导航 ==========
+            function switchPage(idx) {
+                currentPage = idx;
+                Object.values(pages).forEach((p, i) => p.style.display = i === idx ? 'block' : 'none');
+                navItems.forEach((n, i) => n.classList.toggle('active', i === idx));
+                if (idx === 0) updateStats();
+                if (idx === 1) updateReviewStats();
+                if (idx === 2) renderWordList();
+                updateNavBadge();
+                $('#mainContent').scrollTop = 0;
+            }
+            navItems.forEach(n => n.addEventListener('click', () => switchPage(parseInt(n.dataset.page))));
+
+            function updateNavBadge() {
+                const cnt = appData.words.filter(w => w.status === 'unreviewed').length;
+                if (cnt > 0) { navBadge.style.display = 'flex'; navBadge.textContent = cnt > 99 ? '99+' : cnt; }
+                else navBadge.style.display = 'none';
+            }
+
+            function updateStats() {
+                const ur = appData.words.filter(w => w.status === 'unreviewed').length;
+                const co = appData.words.filter(w => w.status === 'correct').length;
+                const wr = appData.words.filter(w => w.status === 'wrong').length;
+                ['statUnreviewed','statCorrect','statWrong'].forEach((id,i) => { const el=$('#'+id); if(el) el.textContent=[ur,co,wr][i]; });
+            }
+
+            function updateReviewStats() {
+                const ur = appData.words.filter(w => w.status === 'unreviewed').length;
+                const co = appData.words.filter(w => w.status === 'correct').length;
+                const wr = appData.words.filter(w => w.status === 'wrong').length;
+                ['rStatUnreviewed','rStatCorrect','rStatWrong'].forEach((id,i) => { const el=$('#'+id); if(el) el.textContent=[ur,co,wr][i]; });
+            }
+
+            // ========== API Key ==========
+            $('#btnSaveApiKey').addEventListener('click', () => {
+                const key = apiKeyInput.value.trim();
+                if (!key) return showToast('⚠️ 请输入 API Key');
+                appData.apiKey = key;
+                saveData();
+                showToast('✅ API Key 已保存');
+            });
+
+            // ========== 导入单词（PakePlus兼容原生文件选择） ==========
+            $('#btnImportFile').addEventListener('click', () => fileInput.click());
+            fileInput.addEventListener('change', e => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = ev => {
+                    const words = parseTxtFile(ev.target.result);
+                    if (words.length === 0) return showToast('⚠️ 未能解析到单词');
+                    importWords(words);
+                };
+                reader.onerror = () => showToast('⚠️ 文件读取失败');
+                reader.readAsText(file);
+                fileInput.value = '';
+            });
+
+            function parseTxtFile(text) {
+                return [...new Set(text.split(/\r?\n/)
+                    .map(l => l.replace(/[^\w\-']/g, '').trim().toLowerCase())
+                    .filter(w => w.length > 0 && w.length < 50 && /^[a-z\-']+$/.test(w)))];
+            }
+
+            function importWords(wordArr) {
+                if (!wordArr.length) return showToast('⚠️ 没有有效单词');
+                const existingSet = new Set(appData.words.map(w => w.word));
+                const newWords = wordArr.filter(w => !existingSet.has(w)).map(w => ({
+                    id: Date.now() + Math.random() + '_' + w,
+                    word: w,
+                    status: 'unreviewed',
+                    reviewedAt: null,
+                    userAnswer: null,
+                    correctMeanings: null,
+                    phonetic: null,
+                }));
+                appData.words = [...appData.words, ...newWords];
+                saveData();
+                updateStats();
+                updateReviewStats();
+                updateNavBadge();
+                renderWordList();
+                showToast(`✅ 导入 ${newWords.length} 个新单词（共 ${appData.words.length} 个）`);
+            }
+            $('#btnLoadDemo').addEventListener('click', () => {
+                importWords(['apple','banana','cat','dog','elephant','flower','garden','house',
+                    'island','jungle','king','lion','mountain','night','ocean','piano','queen',
+                    'river','sun','tree','umbrella','village','water','yellow','bridge','cloud',
+                    'dream','earth','forest','gold','happy','ice','journey','key','light','moon',
+                    'north','orange','peace','rain','star','thunder','unity','voice','wind','snow'
+                ]);
+            });
+
+            // ========== 单词列表 ==========
+            function renderWordList() {
+                const filterMap = {
+                    'unreviewed': w => w.status === 'unreviewed',
+                    'correct': w => w.status === 'correct',
+                    'wrong': w => w.status === 'wrong'
+                };
+                const filtered = filterMap[currentWordFilter] ? appData.words.filter(filterMap[currentWordFilter]) : [...appData.words];
+                ['countAll','countUnreviewed','countCorrect','countWrong'].forEach((id,i) => {
+                    const el = $('#'+id);
+                    if (el) el.textContent = [appData.words.length,
+                        appData.words.filter(w=>w.status==='unreviewed').length,
+                        appData.words.filter(w=>w.status==='correct').length,
+                        appData.words.filter(w=>w.status==='wrong').length][i];
+                });
+                wordList.innerHTML = '';
+                if (filtered.length === 0) { wordList.style.display = 'none'; emptyWordList.style.display = 'block'; return; }
+                wordList.style.display = 'block'; emptyWordList.style.display = 'none';
+                filtered.forEach(w => {
+                    const li = document.createElement('li');
+                    li.className = 'word-item';
+                    const tagMap = { unreviewed: 'tag-unreviewed', correct: 'tag-correct', wrong: 'tag-wrong' };
+                    const labelMap = { unreviewed: '未复习', correct: '✅正确', wrong: '❌错误' };
+                    li.innerHTML = `
+                        <span class="word-text">${esc(w.word)}</span>
+                        <span class="word-meaning">${esc(w.correctMeanings?.slice(0,3).join('；')||'')}</span>
+                        <span class="tag ${tagMap[w.status]}">${labelMap[w.status]}</span>`;
+                    wordList.appendChild(li);
+                });
+            }
+            function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+            wordFilterTabs.addEventListener('click', e => {
+                const tab = e.target.closest('.section-tab');
+                if (!tab) return;
+                currentWordFilter = tab.dataset.filter;
+                wordFilterTabs.querySelectorAll('.section-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                renderWordList();
+            });
+            $('#btnResetProgress').addEventListener('click', () => {
+                if (confirm('确定重置所有复习进度？')) {
+                    appData.words.forEach(w => { w.status='unreviewed'; w.reviewedAt=null; w.userAnswer=null; w.correctMeanings=null; w.phonetic=null; });
+                    saveData(); updateStats(); updateReviewStats(); updateNavBadge(); renderWordList();
+                    showToast('🔄 已重置');
+                }
+            });
+
+            // 复习范围选择
+            reviewFilterTabs.addEventListener('click', e => {
+                const tab = e.target.closest('.section-tab');
+                if (!tab) return;
+                reviewFilter = tab.dataset.filter;
+                reviewFilterTabs.querySelectorAll('.section-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+            });
+
+            // ========== DeepSeek API ==========
+            async function callDeepSeek(messages, temp=0.7, maxTokens=500) {
+                if (!appData.apiKey) throw new Error('请先设置 API Key');
+                const res = await fetch('https://api.deepseek.com/chat/completions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${appData.apiKey}` },
+                    body: JSON.stringify({ model: 'deepseek-chat', messages, temperature: temp, max_tokens: maxTokens }),
+                });
+                if (!res.ok) {
+                    const err = await res.text();
+                    let msg = `API请求失败(${res.status})`;
+                    try { msg = JSON.parse(err).error?.message || msg; } catch (e) {}
+                    throw new Error(msg);
+                }
+                const data = await res.json();
+                const content = data.choices?.[0]?.message?.content;
+                if (!content) throw new Error('API返回为空');
+                return content.trim();
+            }
+
+            async function getWordMeanings(word) {
+                const prompt = `你是英语词典。为单词"${word}"严格返回JSON：{"phonetic":"音标","meanings":["中文意思1","中文意思2","中文意思3"]}。只返回JSON。`;
+                const content = await callDeepSeek([{ role: 'user', content: prompt }], 0.3, 300);
+                let jsonStr = content;
+                const m = content.match(/```(?:json)?\s*([\s\S]*?)```/);
+                if (m) jsonStr = m[1].trim();
+                else { const s = content.indexOf('{'), e = content.lastIndexOf('}'); if (s!==-1 && e!==-1) jsonStr = content.substring(s, e+1); }
+                const parsed = JSON.parse(jsonStr);
+                return { phonetic: parsed.phonetic || '', meanings: (parsed.meanings || []).map(s => String(s).trim()).filter(s => s) };
+            }
+
+            async function judgeAnswer(word, meanings, userAnswer) {
+                const prompt = `单词"${word}"正确意思：${meanings.join('、')}。用户回答："${userAnswer}"。判断是否匹配任意一个意思（大意对即可）。正确请表扬，错误请纠正并给出正确意思。30字内中文。`;
+                return await callDeepSeek([{ role: 'user', content: prompt }], 0.5, 150);
+            }
+
+            // ========== TTS ==========
+            function speakText(text, lang='zh-CN', rate=0.9) {
+                return new Promise(resolve => {
+                    if (!window.speechSynthesis) { resolve(); return; }
+                    speechSynthesis.cancel();
+                    const u = new SpeechSynthesisUtterance(text);
+                    u.lang = lang; u.rate = rate; u.pitch = 1; u.volume = 1;
+                    const voices = speechSynthesis.getVoices();
+                    const v = voices.find(x => x.lang.startsWith(lang==='zh-CN'?'zh':'en')) || voices[0];
+                    if (v) u.voice = v;
+                    u.onend = () => resolve();
+                    u.onerror = () => resolve();
+                    setTimeout(() => speechSynthesis.speak(u), 80);
+                    setTimeout(() => resolve(), 15000);
+                });
+            }
+            const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+            async function speakWordIntro(word) {
+                await speakText(word, 'en-US', 0.85);
+                await sleep(250);
+                await speakText(word.split('').join(' - '), 'en-US', 0.55);
+                await sleep(350);
+                await speakText('请问，这个单词的中文意思是什么？', 'zh-CN', 0.9);
+            }
+
+            // ========== 语音识别 (Web Speech API，Android WebView 兼容) ==========
+            function createRecognition() {
+                const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SR) return null;
+                const r = new SR();
+                r.lang = 'zh-CN';
+                r.continuous = false;
+                r.interimResults = false;
+                r.maxAlternatives = 2;
+                return r;
+            }
+
+            function startListening() {
+                return new Promise((resolve) => {
+                    const rec = createRecognition();
+                    if (!rec) { resolve(''); return; }
+                    let settled = false;
+                    rec.onresult = e => {
+                        settled = true;
+                        const results = [];
+                        for (let i=0; i<e.results.length; i++)
+                            for (let j=0; j<e.results[i].length; j++) results.push(e.results[i][j].transcript.trim());
+                        resolve(results[0] || '');
+                    };
+                    rec.onerror = e => { if (!settled) { settled=true; resolve(''); } };
+                    rec.onend = () => { if (!settled) { settled=true; resolve(''); } };
+                    try { rec.start(); } catch (e) { resolve(''); }
+                    setTimeout(() => { if (!settled) { settled=true; try{rec.stop();}catch(e){} resolve(''); } }, 10000);
+                });
+            }
+
+            // ========== 复习核心 ==========
+            function getWordPool() {
+                const m = {
+                    'unreviewed': w => w.status === 'unreviewed',
+                    'correct': w => w.status === 'correct',
+                    'wrong': w => w.status === 'wrong',
+                    'reviewed': w => w.status !== 'unreviewed',
+                    'all': () => true,
+                };
+                return appData.words.filter(m[reviewFilter] || m['all']);
+            }
+
+            function setListenStatus(status) {
+                reviewState.status = status;
+                listenDot.className = 'listen-dot ' + status;
+                const labels = { idle:'空闲', listening:'监听中', speaking:'播报中', judging:'判断中' };
+                listenLabel.textContent = labels[status] || status;
+            }
+
+            function stopLoopListening() {
+                if (reviewState.loopTimer) { clearTimeout(reviewState.loopTimer); reviewState.loopTimer = null; }
+                if (reviewState.recognition) { try { reviewState.recognition.stop(); } catch(e){} reviewState.recognition = null; }
+            }
+
+            function scheduleNextListen(delay = 600) {
+                if (!reviewState.active) return;
+                stopLoopListening();
+                reviewState.loopTimer = setTimeout(() => {
+                    if (!reviewState.active) return;
+                    if (reviewState.status === 'speaking' || reviewState.status === 'judging') {
+                        scheduleNextListen(400);
+                        return;
+                    }
+                    setListenStatus('listening');
+                    doListen();
+                }, delay);
+            }
+
+            async function doListen() {
+                if (!reviewState.active || reviewState.status === 'speaking' || reviewState.status === 'judging') return;
+                setListenStatus('listening');
+                const text = await startListening();
+                if (!reviewState.active) return;
+                if (reviewState.status === 'speaking' || reviewState.status === 'judging') {
+                    scheduleNextListen(300);
+                    return;
+                }
+                if (!text) { scheduleNextListen(400); return; }
+                await processVoice(text);
+                if (reviewState.active && reviewState.status === 'listening') scheduleNextListen(400);
+            }
+
+            async function processVoice(text) {
+                const lower = text.replace(/[，,。.!！\s]/g, '').toLowerCase();
+                if (/^(退出|结束|关闭|quit|exit)$/i.test(lower)) {
+                    reviewFeedback.textContent = '收到退出指令，再见！';
+                    reviewFeedback.className = 'review-feedback neutral';
+                    await speakText('好的，退出复习');
+                    closeReview();
+                    return;
+                }
+                if (/^(下一个|跳过|下一题|skip|next|pass)$/i.test(lower)) {
+                    if (!reviewState.hasJudged && reviewState.accumulatedAnswer) {
+                        reviewFeedback.textContent = '还没判断呢，再说一次“下一个”确认跳过';
+                        reviewFeedback.className = 'review-feedback neutral';
+                        await speakText('还没判断，再说一次下一个确认跳过');
+                        reviewState.accumulatedAnswer = '';
+                        return;
+                    }
+                    reviewState.accumulatedAnswer = '';
+                    reviewState.hasJudged = false;
+                    await proceedToNextWord();
+                    return;
+                }
+                if (lower.includes('判断') || lower.includes('批改')) {
+                    const answerPart = text.replace(/判断|批改/gi, '').trim();
+                    if (answerPart) reviewState.accumulatedAnswer += (reviewState.accumulatedAnswer?' ':'') + answerPart;
+                    if (!reviewState.accumulatedAnswer) {
+                        reviewFeedback.textContent = '请先说出单词的中文意思';
+                        reviewFeedback.className = 'review-feedback neutral';
+                        await speakText('请先说出单词的中文意思');
+                        return;
+                    }
+                    if (reviewState.hasJudged) {
+                        reviewFeedback.textContent = '已批改过了，说“下一个”继续';
+                        reviewFeedback.className = 'review-feedback neutral';
+                        await speakText('已批改过了，说下一个继续');
+                        return;
+                    }
+                    await triggerJudgment();
+                    return;
+                }
+                reviewState.accumulatedAnswer += (reviewState.accumulatedAnswer?' ':'') + text;
+                reviewFeedback.textContent = `已记录: "${reviewState.accumulatedAnswer}"`;
+                reviewFeedback.className = 'review-feedback neutral';
+                await speakText('收到，说判断来批改');
+            }
+
+            async function triggerJudgment() {
+                if (!reviewState.currentWordObj || reviewState.hasJudged) return;
+                setListenStatus('judging');
+                stopLoopListening();
+                reviewStatus.textContent = 'AI判断中...';
+                reviewFeedback.textContent = '正在判断...';
+                reviewFeedback.className = 'review-feedback neutral';
+                try {
+                    const judgment = await judgeAnswer(reviewState.currentWordObj.word, reviewState.currentMeanings, reviewState.accumulatedAnswer);
+                    const isCorrect = /答对了|正确|很棒|很好|没错|对|bingo|correct|right/i.test(judgment) && !/错误|不对|不正确|错|wrong|incorrect/i.test(judgment);
+                    const isWrong = /错误|不对|不正确|应该是|意思是|不是|错了/i.test(judgment) && !/答对了|正确.*！|很棒|很好|没错/i.test(judgment);
+                    const finalCorrect = isWrong ? false : isCorrect;
+                    reviewState.currentWordObj.status = finalCorrect ? 'correct' : 'wrong';
+                    reviewState.currentWordObj.reviewedAt = Date.now();
+                    reviewState.currentWordObj.userAnswer = reviewState.accumulatedAnswer;
+                    reviewState.hasJudged = true;
+                    reviewState.accumulatedAnswer = '';
+                    reviewFeedback.textContent = judgment;
+                    reviewFeedback.className = finalCorrect ? 'review-feedback correct' : 'review-feedback wrong';
+                    reviewStatus.textContent = finalCorrect ? '✅ 回答正确！' : '❌ 回答错误';
+                    reviewHint.innerHTML = '⏭ 说 <b>“下一个”</b> 继续 · 🚪 说 <b>“退出”</b> 结束';
+                    setListenStatus('speaking');
+                    await speakText(judgment);
+                    await sleep(300);
+                    await speakText('正确意思是：' + reviewState.currentMeanings.join('、'));
+                    await speakText('说下一个继续');
+                    saveData(); updateStats(); updateReviewStats(); updateNavBadge(); renderWordList();
+                } catch (err) {
+                    reviewFeedback.textContent = '判断出错: ' + err.message;
+                    reviewFeedback.className = 'review-feedback wrong';
+                    setListenStatus('speaking');
+                    await speakText('判断出错了，请重试');
+                }
+                setListenStatus('listening');
+                scheduleNextListen(500);
+            }
+
+            async function proceedToNextWord() {
+                if (!reviewState.active) return;
+                stopLoopListening();
+                reviewState.accumulatedAnswer = '';
+                reviewState.hasJudged = false;
+                reviewState.currentWordObj = null;
+                reviewState.currentMeanings = [];
+                reviewFeedback.className = 'review-feedback neutral';
+                reviewFeedback.textContent = '准备下一个单词...';
+                reviewStatus.textContent = '正在获取...';
+                reviewWordDisplay.textContent = '...';
+                reviewHint.innerHTML = '🗣️ 说出中文意思后说 <b>“判断”</b> 批改';
+                const pool = getWordPool();
+                if (pool.length === 0) {
+                    reviewStatus.textContent = '🎉 太棒了！';
+                    reviewWordDisplay.textContent = '完成';
+                    reviewFeedback.className = 'review-feedback correct';
+                    reviewFeedback.textContent = '该范围单词已全部复习完毕！';
+                    reviewHint.textContent = '说“退出”结束或更换复习范围';
+                    setListenStatus('idle');
+                    await speakText('恭喜！该范围单词已全部复习完毕');
+                    scheduleNextListen(800);
+                    return;
+                }
+                const wordObj = pool[Math.floor(Math.random() * pool.length)];
+                reviewState.currentWordObj = wordObj;
+                reviewWordDisplay.textContent = wordObj.word;
+                reviewStatus.textContent = '获取AI翻译中...';
+                try {
+                    const { phonetic, meanings } = await getWordMeanings(wordObj.word);
+                    reviewState.currentMeanings = meanings;
+                    wordObj.phonetic = phonetic;
+                    wordObj.correctMeanings = meanings;
+                    reviewStatus.textContent = phonetic ? `音标: ${phonetic}` : '准备播放';
+                    reviewFeedback.textContent = '请听发音和拼写...';
+                    setListenStatus('speaking');
+                    await speakWordIntro(wordObj.word);
+                    reviewFeedback.textContent = '请说出中文意思';
+                    reviewStatus.textContent = phonetic ? `音标: ${phonetic}` : '等待回答';
+                    setListenStatus('listening');
+                    scheduleNextListen(500);
+                } catch (err) {
+                    reviewFeedback.textContent = '获取失败: ' + err.message;
+                    reviewFeedback.className = 'review-feedback wrong';
+                    reviewStatus.textContent = '错误';
+                    setListenStatus('listening');
+                    scheduleNextListen(800);
+                }
+            }
+
+            async function startReviewSession() {
+                if (!appData.apiKey) return showToast('⚠️ 请先设置API Key');
+                const pool = getWordPool();
+                if (pool.length === 0) return showToast('📭 该范围没有单词，请更换筛选或导入新单词');
+                reviewOverlay.style.display = 'flex';
+                reviewState.active = true;
+                reviewState.accumulatedAnswer = '';
+                reviewState.hasJudged = false;
+                reviewState.currentWordObj = null;
+                reviewState.currentMeanings = [];
+                setListenStatus('idle');
+                reviewFeedback.className = 'review-feedback neutral';
+                reviewFeedback.textContent = '准备就绪';
+                reviewStatus.textContent = '正在准备...';
+                reviewWordDisplay.textContent = '---';
+                reviewHint.innerHTML = '🗣️ 说出中文意思后说 <b>“判断”</b> 批改';
+                await proceedToNextWord();
+            }
+
+            function closeReview() {
+                reviewState.active = false;
+                stopLoopListening();
+                if (window.speechSynthesis) speechSynthesis.cancel();
+                reviewOverlay.style.display = 'none';
+                setListenStatus('idle');
+                updateStats(); updateReviewStats(); updateNavBadge(); renderWordList();
+                switchPage(1);
+            }
+
+            // ========== 事件绑定 ==========
+            $('#btnStartReview').addEventListener('click', startReviewSession);
+            $('#btnReviewClose').addEventListener('click', () => {
+                if (reviewState.active && reviewState.hasJudged === false && reviewState.accumulatedAnswer) {
+                    if (!confirm('当前单词还未判断，确定退出吗？')) return;
+                }
+                closeReview();
+            });
+
+            // ========== 初始化 ==========
+            function init() {
+                loadData();
+                if (apiKeyInput) apiKeyInput.value = appData.apiKey;
+                updateStats(); updateReviewStats(); updateNavBadge(); renderWordList();
+                switchPage(0);
+                if (window.speechSynthesis) {
+                    speechSynthesis.getVoices();
+                    speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
+                }
+                // PakePlus 环境下检测语音识别支持
+                const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+                if (!SR) {
+                    const w = document.createElement('div');
+                    w.style.cssText = 'font-size:11px;color:#FF9500;text-align:center;margin-top:8px;padding:8px;background:#FFF8E1;border-radius:8px;';
+                    w.textContent = '⚠️ 当前环境不支持语音识别，请使用Chrome或PakePlus打包';
+                    pages.review.querySelector('.card')?.appendChild(w);
+                }
+            }
+            init();
+            console.log('🎧 耳机背单词已就绪 - PakePlus 兼容版');
+        })();
+    </script>
+</body>
+</html>
